@@ -1,0 +1,48 @@
+name: Release
+
+# Builds the release artifacts from a tag in a clean runner, attaches them to the GitHub release
+# and creates signed build-provenance attestations (verify with `gh attestation verify`).
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing tag to (re)build artifacts for
+        required: true
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  release:
+    name: Build and attest
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.TAG }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - run: bash scripts/reproduce.sh
+      - uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: |
+            dist/*.tgz
+            dist/veilops-range-v1.json
+            dist/SHA256SUMS
+      - name: Attach artifacts to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --prerelease --verify-tag --title "$TAG" --notes "See CHANGELOG.md."
+          gh release upload "$TAG" dist/*.tgz dist/veilops-range-v1.json dist/SHA256SUMS --clobber

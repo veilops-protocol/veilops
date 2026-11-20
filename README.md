@@ -3,6 +3,7 @@
 <p align="center">
   <a href="https://github.com/veilops-protocol/veilops/actions/workflows/ci.yml"><img src="https://github.com/veilops-protocol/veilops/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://github.com/veilops-protocol/veilops/actions/workflows/codeql.yml"><img src="https://github.com/veilops-protocol/veilops/actions/workflows/codeql.yml/badge.svg" alt="CodeQL"></a>
+  <a href="https://github.com/veilops-protocol/veilops/actions/workflows/devnet-anchors.yml"><img src="https://github.com/veilops-protocol/veilops/actions/workflows/devnet-anchors.yml/badge.svg" alt="Devnet anchors"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-F3F3EF?labelColor=111313" alt="License: Apache-2.0"></a>
   <img src="https://img.shields.io/badge/status-experimental%20%C2%B7%20unaudited-D8B26A?labelColor=111313" alt="Status: experimental, unaudited">
   <a href="https://veilops.tech"><img src="https://img.shields.io/badge/site-veilops.tech-72D6A1?labelColor=111313" alt="veilops.tech"></a>
@@ -14,9 +15,20 @@
 
 Privacy infrastructure for programmable financial operations, cryptographic proofs and selective disclosure.
 
-[veilops.tech](https://veilops.tech) · [Documentation](docs/) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md) · License: [Apache-2.0](LICENSE)
+[veilops.tech](https://veilops.tech) · [Verify it yourself](VERIFY.md) · [Documentation](docs/) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md) · License: [Apache-2.0](LICENSE)
 
-> **Status: experimental, Phase 01 (Foundation).** The cryptography in this repository is real but has not been audited or externally reviewed. There are no npm packages and no mainnet deployment; tagged source releases are snapshots of this repository, not production builds. Do not use it to protect real funds or real personal data.
+> **Status: experimental, Phase 01 (Foundation).** The cryptography in this repository is real but has not been audited or externally reviewed. There are no npm packages and no mainnet deployment. Releases ship reproducible package tarballs with signed build provenance, not production builds. Do not use it to protect real funds or real personal data.
+
+## Verify, don't trust
+
+| Check | Where |
+| --- | --- |
+| Reproducible build: byte-identical package tarballs + `SHA256SUMS` | `bash scripts/reproduce.sh`, [VERIFY.md §1](VERIFY.md#1-reproducible-build) |
+| Reference test vectors, checked by a second, independent standard-library Python implementation | [`test-vectors/`](test-vectors), [`verifiers/python/`](verifiers/python) |
+| Records anchored on Solana devnet, re-checked daily from a public RPC | [VERIFY.md §3](VERIFY.md#3-solana-devnet-anchors) |
+| Signed build provenance on release assets | `gh attestation verify`, [VERIFY.md §4](VERIFY.md#4-build-provenance) |
+| SSH-signed commits from a published maintainer key | [MAINTAINERS.md](MAINTAINERS.md) |
+| Independent cryptographic review | **Not yet.** Scope and status: [docs/audit-scope.md](docs/audit-scope.md) |
 
 ---
 
@@ -104,17 +116,17 @@ What the proof system is and is not:
 
 ## Getting started
 
-Requirements: Node.js 22 (see [`.nvmrc`](.nvmrc); `engines` allows `>=20.10`) and npm.
+Requirements: Node.js 22 (exact version pinned in [`.nvmrc`](.nvmrc)), npm, and optionally Python 3 for the independent verifier.
 
 ```bash
 git clone https://github.com/veilops-protocol/veilops.git
 cd veilops
 npm ci
-npm test          # vitest: 31 tests across unit, integration and security suites
+npm test          # vitest: 74 tests across unit, integration, security and reference-vector suites
+npm run verify:python   # independent Python verifier over the same vectors
 npx tsx examples/basic-operation.ts
 ```
 
-> The GitHub organization `veilops-protocol` is not created yet; the clone URL above is the intended location.
 
 ## Installation
 
@@ -188,22 +200,25 @@ veilops/
 │   ├── policy-engine/        policy definition and evaluation
 │   ├── proof-engine/         Pedersen commitments, range proofs, attestation
 │   ├── sdk/                  createClient / process
-│   └── solana-adapter/       SPL Memo anchor instruction builder
+│   └── solana-adapter/       SPL Memo anchor instruction builder (devnet scripts in scripts/)
 ├── tests/
 │   ├── unit/                 per-package tests
 │   ├── integration/          end-to-end lifecycle
-│   └── security/             tamper and malformed-input tests
+│   ├── security/             tamper and malformed-input tests
+│   └── vectors/              reference test vectors
+├── test-vectors/             veilops-range-v1 reference vectors (JSON)
+├── verifiers/python/         independent standard-library verifier
 ├── examples/                 runnable with `npx tsx examples/<file>.ts`
-├── scripts/                  sample-record generator
+├── scripts/                  samples, test vectors, reproduce.sh, devnet anchor + verify
 ├── docs/                     protocol, cryptography and security documentation
-└── .github/                  CI, audit workflow, issue and PR templates
+└── .github/                  CI, CodeQL, audit, release (provenance), devnet-anchor workflows
 ```
 
 ## Roadmap
 
 | Phase | Scope | Status |
 | --- | --- | --- |
-| **01 Foundation** | Monorepo, shared types, envelope encryption, policy engine, `veilops-range-v1` proofs, Ed25519 attestation, SDK lifecycle, 31 tests, documentation, website | **In progress** (core packages done) |
+| **01 Foundation** | Monorepo, shared types, envelope encryption, policy engine, `veilops-range-v1` proofs, Ed25519 attestation, SDK lifecycle, 74 tests, reference vectors + independent verifier, documentation, website | **In progress** (core packages done) |
 | **02 Proof Infrastructure** | Proof format versioning, test vectors, batch verification, evaluation of a succinct range proof (e.g. Bulletproofs), performance work | Planned |
 | **03 Solana Integration** | Exercise the memo anchor on devnet, Token-2022 confidential transfer integration, design of an on-chain program | Planned |
 | **04 Applications** | Explorer, treasury and payroll reference apps, auditor disclosure workflow | Planned |

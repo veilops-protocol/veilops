@@ -42,4 +42,19 @@ describe('published records', () => {
     expect(verifyRecord({ ...record, proof: encodeProof(p) }).valid).toBe(false);
     expect(verifyRecord({ ...record, attestation: { ...record.attestation, signature: '00'.repeat(64) } }).valid).toBe(false);
   });
+  it('reject a non-canonical (S + L) signature and malformed records instead of throwing', async () => {
+    const veil = createClient();
+    const { record } = await veil.process({ name: 'n', category: 'treasury', recipient: 'r', amount: 10, asset: 'USDC', policyLimit: 100, mode: 'full' }, definePolicy({ name: 'p', maxAmount: 100, rangeBits: 16 }));
+    const L = 2n ** 252n + 27742317777372353535851937790883648493n;
+    const sig = record.attestation.signature;
+    const sLE = BigInt('0x' + (sig.slice(64).match(/../g) ?? []).reverse().join(''));
+    const hi = (sLE + L).toString(16).padStart(64, '0');
+    const malleable = sig.slice(0, 64) + (hi.match(/../g) ?? []).reverse().join('');
+    expect(verifyRecord({ ...record, attestation: { ...record.attestation, signature: malleable } }).attestation).toBe(false);
+    const broken = { ...record } as Partial<typeof record>;
+    delete broken.policy;
+    expect(() => verifyRecord(broken as typeof record)).not.toThrow();
+    expect(verifyRecord(broken as typeof record).valid).toBe(false);
+  });
 });
+

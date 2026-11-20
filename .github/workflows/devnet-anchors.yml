@@ -1,0 +1,27 @@
+name: Devnet anchors
+
+# Re-checks every published Solana devnet anchor against a public RPC: the memo must match the
+# published record, the transaction must be signed by the published key, and the record must verify.
+on:
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['apps/website/data/devnet-anchors.json', 'scripts/devnet-verify.ts']
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify devnet anchors
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx tsx scripts/devnet-verify.ts

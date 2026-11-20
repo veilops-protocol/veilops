@@ -10,7 +10,7 @@
     "apps/*"
   ],
   "engines": {
-    "node": ">=20.10"
+    "node": ">=22"
   },
   "scripts": {
     "dev": "npm run dev -w @veilops/website",
@@ -20,10 +20,17 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "samples": "tsx scripts/generate-samples.ts",
-    "audit:deps": "npm audit --omit=dev --audit-level=high"
+    "audit:deps": "npm audit --omit=dev --audit-level=high",
+    "reproduce": "bash scripts/reproduce.sh",
+    "vectors": "tsx scripts/generate-test-vectors.ts",
+    "verify:python": "python3 verifiers/python/veilops_verify.py test-vectors/veilops-range-v1.json"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",
+    "@solana-program/memo": "0.16.0",
+    "@solana/kit": "8.6.0",
+    "@solana/kit-plugin-rpc": "0.23.0",
+    "@solana/kit-plugin-signer": "0.23.0",
     "@types/node": "22.20.5",
     "eslint": "9.39.5",
     "tsx": "4.23.15",
