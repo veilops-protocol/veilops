@@ -1,9 +1,9 @@
 #!/bin/bash
 # VEILOPS install/update on a Linux host with Node 22+, systemd and Caddy (idempotent, zero downtime for other sites).
 # Upload /root/veilops-release.tgz (Next.js standalone build) first. Own user, port 3700, no secrets, no data dir.
-# Touches no other site: only the VEILOPS Caddy blocks (primary domain, www, and the old domain as a redirect) are added/replaced (validate, then reload).
+# Touches no other site: only the VEILOPS Caddy blocks (domain + www) are added/replaced (validate, then reload).
 set -e
-APP=veilops; PORT=3700; DOMAIN=veilops.tech; OLD=veilops.tech
+APP=veilops; PORT=3700; DOMAIN=veilops.tech
 id $APP >/dev/null 2>&1 || useradd -r -m -d /opt/$APP -s /usr/sbin/nologin $APP
 mkdir -p /opt/$APP/releases /etc/$APP
 cat > /etc/$APP/env <<ENV
@@ -46,11 +46,11 @@ systemctl restart $APP
 for i in $(seq 1 60); do curl -sf 127.0.0.1:$PORT/api/health >/dev/null && break; sleep .25; done
 curl -sf 127.0.0.1:$PORT/api/health >/dev/null || { echo "app failed to start"; journalctl -u $APP -n 40 --no-pager; exit 1; }
 
-if ! grep -q "^$DOMAIN {" /etc/caddy/Caddyfile || ! grep -q "^$OLD, www.$OLD {" /etc/caddy/Caddyfile; then
+if ! grep -q "^$DOMAIN {" /etc/caddy/Caddyfile; then
   BAK=/root/Caddyfile.bak-$APP-$(date -u +%Y%m%d-%H%M%S); cp /etc/caddy/Caddyfile $BAK
-  python3 - $DOMAIN $PORT $OLD <<'PY'
+  python3 - $DOMAIN $PORT <<'PY'
 import sys,re
-d,port,old=sys.argv[1],sys.argv[2],sys.argv[3]; p='/etc/caddy/Caddyfile'; s=open(p).read()
+d,port=sys.argv[1],sys.argv[2]; p='/etc/caddy/Caddyfile'; s=open(p).read()
 blk=f'''{d} {{
 	encode gzip zstd
 	reverse_proxy 127.0.0.1:{port} {{
@@ -65,13 +65,8 @@ blk=f'''{d} {{
 
 www.{d} {{
 	redir https://{d}{{uri}} permanent
-}}
-
-{old}, www.{old} {{
-	redir https://{d}{{uri}} permanent
 }}'''
-s=re.sub(r'(?m)^'+re.escape(old)+r', www\.'+re.escape(old)+r' \{\n(?:\t.*\n|\n)*?\}\n*', '', s)
-for name in (d, 'www.'+d, old, 'www.'+old):
+for name in (d, 'www.'+d):
     s=re.sub(r'(?m)^'+re.escape(name)+r' \{\n(?:\t.*\n|\n)*?\}\n*', '', s)
 open(p,'w').write(s.rstrip('\n')+'\n\n'+blk+'\n')
 PY
