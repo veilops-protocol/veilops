@@ -3,7 +3,8 @@
  *
  * Each memo is `veilops:<version>:<proofId>:<sha256(canonicalJson(record))>` (see @veilops/solana-adapter).
  * Devnet SOL has no monetary value; nothing is transferred, the only cost is the devnet fee.
- * Results are written to apps/website/data/devnet-anchors.json and checked by scripts/devnet-verify.ts.
+ * Results are written to apps/website/data/devnet-anchors.json after every transaction and checked by
+ * scripts/devnet-verify.ts. If the file is ever lost, scripts/devnet-sync.ts rebuilds it from the chain.
  *
  *   VEILOPS_DEVNET_KEYPAIR=/path/outside/repo/devnet-keypair.json npx tsx scripts/devnet-anchor.ts [count]
  *
@@ -46,20 +47,9 @@ if (balance < 5_000_000n) {
   await client.airdrop(address(payer), lamports(1_000_000_000n));
 }
 
-const anchors = [...previous.anchors];
-for (const { record } of candidates) {
-  const memo = anchorMemo(record);
-  const result = await client.sendTransaction([getAddMemoInstruction({ memo }, { programAddress: address(MEMO_PROGRAM_ID) })]);
-  const signature = result.context.signature;
-  const tx = await client.rpc.getTransaction(signature, { maxSupportedTransactionVersion: 0, commitment: 'confirmed', encoding: 'json' }).send();
-  anchors.push({
-    operationId: record.operationId, proofId: record.proofId, recordDigest: recordDigest(record), memo, signature,
-    slot: tx ? Number(tx.slot) : null, blockTime: tx?.blockTime ? new Date(Number(tx.blockTime) * 1000).toISOString() : null,
-  });
-  console.log(`anchored ${record.operationId} -> ${signature}`);
-}
-
-writeFileSync(outPath, JSON.stringify({
+type Anchor = { operationId: string; proofId: string; recordDigest: string; memo: string; signature: string; slot: number | null; blockTime: string | null };
+const anchors: Anchor[] = [...previous.anchors];
+const save = (): void => writeFileSync(outPath, JSON.stringify({
   cluster: 'devnet',
   memoProgram: MEMO_PROGRAM_ID,
   signer: payer,
@@ -67,4 +57,33 @@ writeFileSync(outPath, JSON.stringify({
   explorer: 'https://explorer.solana.com/tx/<signature>?cluster=devnet',
   anchors,
 }, null, 2) + '\n');
+
+async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
+  for (let attempt = 0; ; attempt++) {
+    try { return await fn(); } catch (e) {
+      if (attempt >= 5 || !String((e as Error)?.message ?? e).includes('429')) throw e;
+      await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
+    }
+  }
+}
+
+for (const { record } of candidates) {
+  const memo = anchorMemo(record);
+  const result = await client.sendTransaction([getAddMemoInstruction({ memo }, { programAddress: address(MEMO_PROGRAM_ID) })]);
+  const signature = result.context.signature;
+  // Record the anchor immediately, so a later RPC failure never loses a transaction that already landed.
+  const entry: Anchor = { operationId: record.operationId, proofId: record.proofId, recordDigest: recordDigest(record), memo, signature, slot: null, blockTime: null };
+  anchors.push(entry);
+  save();
+  const tx = await withRetry(() => client.rpc.getTransaction(signature, { maxSupportedTransactionVersion: 0, commitment: 'confirmed', encoding: 'json' }).send()).catch(() => null);
+  if (tx) {
+    entry.slot = Number(tx.slot);
+    entry.blockTime = tx.blockTime ? new Date(Number(tx.blockTime) * 1000).toISOString() : null;
+    save();
+  }
+  console.log(`anchored ${record.operationId} -> ${signature}`);
+  await new Promise(r => setTimeout(r, 1500)); // stay under public RPC rate limits
+}
+
+save();
 console.log(`wrote ${outPath} (${anchors.length} anchors)`);

@@ -2,6 +2,18 @@
 
 All notable changes to VEILOPS. Dates are UTC. The project follows [Semantic Versioning](https://semver.org); everything below 1.0 is experimental.
 
+## [Unreleased]
+
+### Added
+
+- **First Solana devnet anchors.** Six verified sample records were anchored with SPL Memo transactions on 2026-11-20, in slots 524352545–524352580, signed by `9kpS3zvBWmA5jtatwPd4HvbJ1PgazbsBpxQA38grYQie`. `scripts/devnet-verify.ts` confirms all six against a public RPC, and the daily **Devnet anchors** workflow repeats that check.
+- **`scripts/devnet-sync.ts`** rebuilds the anchor list from the chain, reading only.
+
+### Changed
+
+- **Solana adapter:** devnet status is now `tested`. The adapter package itself still never sends; transactions are sent by `scripts/devnet-anchor.ts`.
+- **`scripts/devnet-anchor.ts`** saves each anchor as soon as its transaction lands and retries on public-RPC rate limits.
+
 ## [0.1.1] - 2026-11-20
 
 ### Added

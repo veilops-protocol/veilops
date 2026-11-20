@@ -1,6 +1,6 @@
 # @veilops/solana-adapter
 
-**Status: experimental. Never sends a transaction. Not tested on devnet, testnet or mainnet.** Not published to npm.
+**Status: experimental. Never sends a transaction itself. Tested on devnet (6 anchors via `scripts/devnet-anchor.ts`); not on testnet or mainnet.** Not published to npm.
 
 Builds an SPL Memo instruction that anchors a VEILOPS record:
 
@@ -17,7 +17,7 @@ const ix = buildAnchorInstruction(record, signerBase58);
 // ix = { programId: MEMO_PROGRAM_ID, keys: [{ pubkey: signer, isSigner: true, isWritable: false }], data }
 // Convert to your Solana client's instruction type yourself.
 parseAnchorMemo(anchorMemo(record)); // { version, proofId, digest }
-CLUSTER_STATUS; // { devnet: 'untested', testnet: 'untested', 'mainnet-beta': 'untested' }
+CLUSTER_STATUS; // { devnet: 'tested', testnet: 'untested', 'mainnet-beta': 'untested' }
 ```
 
 Planned (not implemented): Token-2022 confidential transfer integration and an on-chain program. No program exists in this repository. License: Apache-2.0.

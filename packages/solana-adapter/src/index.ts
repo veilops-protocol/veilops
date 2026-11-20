@@ -3,8 +3,8 @@
  *
  * Status: experimental. The adapter builds an SPL Memo instruction that anchors
  *   veilops:<version>:<proofId>:<recordDigest>
- * so anyone can later check that a published record existed at a slot. It has NOT been exercised on
- * devnet or mainnet from this repository; no transaction is sent by this package. Signing and sending
+ * so anyone can later check that a published record existed at a slot. It has been exercised on devnet
+ * (scripts/devnet-anchor.ts, 6 anchors, verified daily); never on mainnet. No transaction is sent by this package. Signing and sending
  * stay with the caller's wallet. Confidential transfers (Token-2022 extension) are a planned integration.
  */
 import { canonicalJson, sha256Hex, type PublicRecord } from '@veilops/shared';
@@ -12,7 +12,7 @@ import { canonicalJson, sha256Hex, type PublicRecord } from '@veilops/shared';
 export const MEMO_PROGRAM_ID = 'MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr';
 
 export type Cluster = 'devnet' | 'testnet' | 'mainnet-beta';
-export const CLUSTER_STATUS: Record<Cluster, 'untested' | 'tested'> = { devnet: 'untested', testnet: 'untested', 'mainnet-beta': 'untested' };
+export const CLUSTER_STATUS: Record<Cluster, 'untested' | 'tested'> = { devnet: 'tested', testnet: 'untested', 'mainnet-beta': 'untested' };
 
 export function recordDigest(rec: PublicRecord): string {
   return sha256Hex(canonicalJson(rec));
