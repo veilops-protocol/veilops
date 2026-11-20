@@ -1,0 +1,23 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    groups:
+      noble:
+        patterns: ['@noble/*']
+      lint:
+        patterns: ['eslint', '@eslint/*', 'typescript-eslint']
+      test:
+        patterns: ['vitest', 'tsx', 'typescript', '@types/*']
+    labels: [dependencies]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    labels: [dependencies, ci]

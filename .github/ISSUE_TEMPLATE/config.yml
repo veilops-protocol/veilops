@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/veilops-protocol/veilops/security/advisories/new
+    about: Please report vulnerabilities privately through GitHub Security Advisories. Never open a public issue for a security problem.
+  - name: Security policy
+    url: https://github.com/veilops-protocol/veilops/blob/main/SECURITY.md
+    about: Scope, process and what to expect.
+  - name: Documentation
+    url: https://github.com/veilops-protocol/veilops/tree/main/docs
+    about: Protocol, cryptography and security model.
