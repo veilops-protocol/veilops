@@ -1,0 +1,54 @@
+name: Program build
+
+# Reproducible build of the veilops-verifier Solana program inside the pinned Solana verifiable-build image,
+# with a signed provenance attestation. The deployed devnet program is compared byte-for-byte with this build.
+on:
+  push:
+    branches: [main]
+    paths: ['onchain/**', '.github/workflows/program.yml', 'scripts/program-hash.ts']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
+
+jobs:
+  build:
+    name: Verifiable program build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build in solanafoundation/solana-verifiable-build:3.1.10 (pinned by digest)
+        run: |
+          docker run --rm -v "$PWD/onchain":/build -w /build \
+            solanafoundation/solana-verifiable-build@sha256:f71be5ca7620b7e40933b7f1294fa44e01d08c1fc5ba1f375a2478f5a01580d3 \
+            cargo build-sbf --manifest-path programs/veilops-verifier/Cargo.toml -- --locked
+          sudo chown -R "$USER" onchain/target
+          sha256sum onchain/target/deploy/veilops_verifier.so | tee veilops_verifier.so.sha256
+      - uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: onchain/target/deploy/veilops_verifier.so
+      - uses: actions/upload-artifact@v7
+        with:
+          name: veilops-verifier-${{ github.sha }}
+          path: |
+            onchain/target/deploy/veilops_verifier.so
+            veilops_verifier.so.sha256
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Compare with the program deployed on devnet
+        run: |
+          set +e
+          npx tsx scripts/program-hash.ts --so onchain/target/deploy/veilops_verifier.so | tee compare.txt
+          code=${PIPESTATUS[0]}
+          {
+            echo "### veilops-verifier build \`$(cut -d' ' -f1 veilops_verifier.so.sha256)\`"
+            echo '```'; cat compare.txt; echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          # 2 = not deployed yet (first build); anything else must be an exact match.
+          if [ "$code" = "2" ]; then exit 0; fi
+          exit $code

@@ -43,3 +43,6 @@ Thumbs.db
 
 # local deploy helper (contains host-specific paths)
 deploy/release.sh
+
+# on-chain program build output
+onchain/target/

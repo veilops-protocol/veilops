@@ -28,6 +28,7 @@
   "devDependencies": {
     "@eslint/js": "9.39.5",
     "@solana-program/memo": "0.16.0",
+    "@solana-program/system": "0.16.0",
     "@solana/kit": "8.6.0",
     "@solana/kit-plugin-rpc": "0.23.0",
     "@solana/kit-plugin-signer": "0.23.0",
