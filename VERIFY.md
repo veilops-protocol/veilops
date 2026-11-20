@@ -7,7 +7,7 @@ You should not have to trust this project's claims. This page lists every check 
 | The code builds and every test passes | [1. Reproducible build](#1-reproducible-build) | Node (version in `.nvmrc`), Python 3 |
 | Release tarballs match the source | [1. Reproducible build](#1-reproducible-build) | same |
 | Two separate implementations agree on the cryptography | [2. Test vectors and the independent verifier](#2-test-vectors-and-the-independent-verifier) | Python 3 only, no packages |
-| Records really are anchored on Solana devnet | [3. Solana devnet anchors](#3-solana-devnet-anchors) | Node, internet |
+| Records are anchored on Solana devnet (first anchors pending) | [3. Solana devnet anchors](#3-solana-devnet-anchors) | Node, internet |
 | Releases were built by GitHub Actions from this repository | [4. Build provenance](#4-build-provenance) | `gh` CLI |
 | Commits come from the same maintainer key | [5. Signed commits](#5-signed-commits) | git |
 | You are on an official channel | [6. Official channels](#6-official-channels) | a browser |
@@ -55,7 +55,9 @@ The second implementation was written separately from the reference code, but by
 
 ## 3. Solana devnet anchors
 
-Verified sample records are anchored on **Solana devnet** with SPL Memo transactions. The memo format is:
+**Status: pending.** No devnet transactions have been published yet. The tooling is in place, and this section describes how the anchors will work and how to check them once they exist.
+
+Verified sample records will be anchored on **Solana devnet** with SPL Memo transactions. The memo format is:
 
 ```
 veilops:<version>:<proofId>:<sha256(canonicalJson(record))>

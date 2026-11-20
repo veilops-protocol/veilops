@@ -25,10 +25,11 @@ All notable changes to VEILOPS. Dates are UTC. The project follows [Semantic Ver
   - byte-identical package tarballs with published `SHA256SUMS`
   - a CI job that prints the checksums
 - **Release workflow** with signed GitHub artifact attestations (build provenance).
-- **Solana devnet anchoring**:
+- **Solana devnet anchoring tooling**:
   - `scripts/devnet-anchor.ts` publishes SPL Memo anchors for verified sample records.
   - `scripts/devnet-verify.ts` re-checks every anchor against a public RPC.
   - A daily workflow repeats the check.
+  - The first devnet anchors are **pending**: no devnet transactions have been published yet.
 - **Trust documentation**:
   - `VERIFY.md`: how to check every claim yourself
   - `docs/audit-scope.md`: the package for an external review; status: not yet reviewed
@@ -42,7 +43,7 @@ All notable changes to VEILOPS. Dates are UTC. The project follows [Semantic Ver
 ### Changed
 
 - **Domain:** the official site is now `https://veilops.tech`.
-- **Solana adapter:** devnet status is "tested". It sends memo anchors through the scripts above; the adapter package itself still sends nothing.
+- **Solana adapter:** unchanged and still sends nothing. Devnet status stays "untested" until the first anchors are published.
 
 ## [0.1.0] - 2026-11-20
 

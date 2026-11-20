@@ -1,7 +1,7 @@
 {
   "name": "veilops",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Privacy infrastructure for programmable financial operations, cryptographic proofs and selective disclosure.",
   "license": "Apache-2.0",
   "type": "module",
