@@ -1,5 +1,13 @@
 <p align="center"><a href="https://veilops.tech"><img src="docs/assets/banner.png" alt="VEILOPS: Privacy is not the absence of proof. It's proof without exposure." width="100%"></a></p>
 
+<p align="center">
+  <a href="https://github.com/veilops-protocol/veilops/actions/workflows/ci.yml"><img src="https://github.com/veilops-protocol/veilops/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/veilops-protocol/veilops/actions/workflows/codeql.yml"><img src="https://github.com/veilops-protocol/veilops/actions/workflows/codeql.yml/badge.svg" alt="CodeQL"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-F3F3EF?labelColor=111313" alt="License: Apache-2.0"></a>
+  <img src="https://img.shields.io/badge/status-experimental%20%C2%B7%20unaudited-D8B26A?labelColor=111313" alt="Status: experimental, unaudited">
+  <a href="https://veilops.tech"><img src="https://img.shields.io/badge/site-veilops.tech-72D6A1?labelColor=111313" alt="veilops.tech"></a>
+</p>
+
 # VEILOPS
 
 > Privacy is not the absence of proof. It's proof without exposure.
@@ -8,7 +16,7 @@ Privacy infrastructure for programmable financial operations, cryptographic proo
 
 [veilops.tech](https://veilops.tech) · [Documentation](docs/) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md) · License: [Apache-2.0](LICENSE)
 
-> **Status: experimental, Phase 01 (Foundation).** The cryptography in this repository is real but has not been audited or externally reviewed. There are no releases, no npm packages and no mainnet deployment. Do not use it to protect real funds or real personal data.
+> **Status: experimental, Phase 01 (Foundation).** The cryptography in this repository is real but has not been audited or externally reviewed. There are no npm packages and no mainnet deployment; tagged source releases are snapshots of this repository, not production builds. Do not use it to protect real funds or real personal data.
 
 ---
 
