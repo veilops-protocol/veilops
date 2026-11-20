@@ -20,4 +20,4 @@ parseAnchorMemo(anchorMemo(record)); // { version, proofId, digest }
 CLUSTER_STATUS; // { devnet: 'tested', testnet: 'untested', 'mainnet-beta': 'untested' }
 ```
 
-Planned (not implemented): Token-2022 confidential transfer integration and an on-chain program. No program exists in this repository. License: Apache-2.0.
+On-chain proof verification lives in [`onchain/`](../../onchain) (the `veilops-verifier` program, devnet). Planned: Token-2022 confidential transfer integration. License: Apache-2.0.

@@ -31,11 +31,30 @@ const raw = await createClient().use(signerFromFile(keyPath)).use(solanaRpc({ rp
 const me = client.payer;
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+/** Poll a signature's status: 'ok', 'failed', or null if it never landed. */
+async function landed(signature: string): Promise<'ok' | 'failed' | null> {
+  for (let i = 0; i < 20; i++) {
+    const st = await client.rpc.getSignatureStatuses([sig(signature)], { searchTransactionHistory: true }).send().catch(() => null);
+    const v = st?.value[0];
+    if (v && (v.confirmationStatus === 'confirmed' || v.confirmationStatus === 'finalized')) return v.err ? 'failed' : 'ok';
+    await sleep(1500);
+  }
+  return null;
+}
+
 async function send(ixs: Instruction[]): Promise<string> {
   for (let attempt = 0; ; attempt++) {
     try { return (await client.sendTransaction(ixs)).context.signature; } catch (e) {
-      const m = String((e as Error)?.message ?? e);
-      if (attempt < 5 && /429|blockhash|timed out|fetch failed/i.test(m)) { await sleep(2000 * (attempt + 1)); continue; }
+      const m = String((e as Error)?.message ?? '') + ' ' + JSON.stringify((e as { context?: unknown })?.context ?? {});
+      // The public RPC sometimes drops the confirmation WebSocket after the transaction was sent. Check whether it
+      // actually landed before retrying, so nothing is ever executed twice.
+      const sent = /\(([1-9A-HJ-NP-Za-km-z]{80,90})\)/.exec(m)?.[1];
+      if (sent) {
+        const status = await landed(sent);
+        if (status === 'ok') return sent;
+        if (status === 'failed') throw e;
+      }
+      if (attempt < 8 && /429|blockhash|timed out|fetch failed|WebSocket|socket|estimate the compute unit/i.test(m)) { await sleep(2000 * (attempt + 1)); continue; }
       throw e;
     }
   }
@@ -83,6 +102,7 @@ const save = () => writeFileSync(outPath, JSON.stringify({
 
 console.log(`cluster ${cluster} · program ${PROGRAM_ID} · operator ${me.address} · ${bitsPerTx} bits per verify tx`);
 for (const d of DEMOS) {
+  if (verified.some(v => (v as { policyName: string }).policyName === d.policy.name)) { console.log(`already verified: ${d.policy.name}`); continue; }
   const args = { operationId: opId(), policyId: d.policy.id, asset: d.asset, category: d.category, maxAmount: d.policy.maxAmount, rangeBits: d.policy.rangeBits };
   const out = provePolicyV2({ ...args, amount: d.amount });
   if (!verifyPolicyV2(out.publicInputs, out.proofBytes)) throw new Error('local verification failed');

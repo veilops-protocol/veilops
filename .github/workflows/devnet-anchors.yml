@@ -1,5 +1,8 @@
 name: Devnet anchors
 
+# Also re-checks the on-chain verifier results: Records owned by the program, proof bytes matching proof_hash,
+# off-chain re-verification of the on-chain proofs, and the cheating attempts failing with no Record.
+
 # Re-checks every published Solana devnet anchor against a public RPC: the memo must match the
 # published record, the transaction must be signed by the published key, and the record must verify.
 on:
@@ -8,7 +11,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['apps/website/data/devnet-anchors.json', 'scripts/devnet-verify.ts']
+    paths: ['apps/website/data/devnet-anchors.json', 'apps/website/data/onchain-verifications.json', 'scripts/devnet-verify.ts', 'scripts/onchain-check.ts']
 
 permissions:
   contents: read
@@ -25,3 +28,5 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx tsx scripts/devnet-verify.ts
+      - name: On-chain verifier results
+        run: npx tsx scripts/onchain-check.ts

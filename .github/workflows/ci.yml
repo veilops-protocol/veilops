@@ -71,7 +71,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Verify reference vectors with the standard-library Python implementation
-        run: python3 verifiers/python/veilops_verify.py test-vectors/veilops-range-v1.json
+        run: python3 verifiers/python/veilops_verify.py test-vectors/veilops-range-v1.json test-vectors/veilops-range-v2.json
 
   reproducible:
     name: Reproducible artifacts

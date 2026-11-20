@@ -17,7 +17,7 @@ Privacy infrastructure for programmable financial operations, cryptographic proo
 
 [veilops.tech](https://veilops.tech) · [Verify it yourself](VERIFY.md) · [Documentation](docs/) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md) · License: [Apache-2.0](LICENSE)
 
-> **Status: experimental, Phase 01 (Foundation).** The cryptography in this repository is real but has not been audited or externally reviewed. There are no npm packages and no mainnet deployment. Releases ship reproducible package tarballs with signed build provenance, not production builds. Do not use it to protect real funds or real personal data.
+> **Status: experimental, Phase 01 (Foundation).** The cryptography in this repository is real but has not been audited or externally reviewed. There are no npm packages and no mainnet deployment; an experimental on-chain verifier runs on Solana devnet. Releases ship reproducible package tarballs with signed build provenance, not production builds. Do not use it to protect real funds or real personal data.
 
 ## Verify, don't trust
 
@@ -25,6 +25,7 @@ Privacy infrastructure for programmable financial operations, cryptographic proo
 | --- | --- |
 | Reproducible build: byte-identical package tarballs + `SHA256SUMS` | `bash scripts/reproduce.sh`, [VERIFY.md §1](VERIFY.md#1-reproducible-build) |
 | Reference test vectors, checked by a second, independent standard-library Python implementation | [`test-vectors/`](test-vectors), [`verifiers/python/`](verifiers/python) |
+| Zero-knowledge proofs verified **on-chain** by a Solana program on devnet (3 verified, 2 forgeries rejected); deployed binary matches the reproducible build | [VERIFY.md §3a](VERIFY.md#3a-on-chain-proof-verification-devnet), [onchain/](onchain) |
 | Records anchored on Solana devnet, re-checked daily from a public RPC | [VERIFY.md §3](VERIFY.md#3-solana-devnet-anchors) |
 | Signed build provenance on release assets | `gh attestation verify`, [VERIFY.md §4](VERIFY.md#4-build-provenance) |
 | SSH-signed commits from a published maintainer key | [MAINTAINERS.md](MAINTAINERS.md) |
@@ -220,7 +221,7 @@ veilops/
 | --- | --- | --- |
 | **01 Foundation** | Monorepo, shared types, envelope encryption, policy engine, `veilops-range-v1` proofs, Ed25519 attestation, SDK lifecycle, 74 tests, reference vectors + independent verifier, documentation, website | **In progress** (core packages done) |
 | **02 Proof Infrastructure** | Proof format versioning, test vectors, batch verification, evaluation of a succinct range proof (e.g. Bulletproofs), performance work | Planned |
-| **03 Solana Integration** | Memo anchoring on devnet (**done**, 6 anchors), Token-2022 confidential transfer integration, design of an on-chain program | Planned |
+| **03 Solana Integration** | Memo anchoring on devnet (**done**, 6 anchors); on-chain zero-knowledge verifier on devnet (**done**, 3 proofs verified, 2 forgeries rejected); Token-2022 confidential transfers | In progress |
 | **04 Applications** | Explorer, treasury and payroll reference apps, auditor disclosure workflow | Planned |
 | **05 Security & Ecosystem** | External cryptography review and audit, published packages, versioned releases, integrations | Planned |
 

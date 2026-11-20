@@ -24,7 +24,7 @@ echo "== typecheck";  npm run -s typecheck
 echo "== lint";       npm run -s lint
 echo "== tests";      npm test --silent
 if command -v python3 >/dev/null; then
-  echo "== independent Python verifier"; python3 verifiers/python/veilops_verify.py test-vectors/veilops-range-v1.json --quiet
+  echo "== independent Python verifier"; python3 verifiers/python/veilops_verify.py test-vectors/veilops-range-v1.json test-vectors/veilops-range-v2.json --quiet
 else
   echo "== python3 not found: skipping the independent verifier (CI always runs it)"
 fi
@@ -34,7 +34,7 @@ rm -rf dist && mkdir -p dist
 for p in shared encryption policy-engine proof-engine sdk solana-adapter; do
   npm pack -w "packages/$p" --pack-destination dist --silent >/dev/null
 done
-cp test-vectors/veilops-range-v1.json dist/
-( cd dist && shasum -a 256 *.tgz veilops-range-v1.json > SHA256SUMS 2>/dev/null || sha256sum *.tgz veilops-range-v1.json > SHA256SUMS )
+cp test-vectors/veilops-range-v1.json test-vectors/veilops-range-v2.json dist/
+( cd dist && shasum -a 256 *.tgz veilops-range-v*.json > SHA256SUMS 2>/dev/null || sha256sum *.tgz veilops-range-v*.json > SHA256SUMS )
 echo "== dist/SHA256SUMS"; cat dist/SHA256SUMS
 echo "source commit: $(git rev-parse HEAD 2>/dev/null || echo unknown)"

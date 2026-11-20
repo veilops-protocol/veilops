@@ -580,6 +580,128 @@ def verify_record(rec) -> dict:
 
 
 # ============================================================================================
+# veilops-range-v2 (binary encoding, SHA-256 Fiat-Shamir; same statement and generators as v1)
+# ============================================================================================
+
+PROOF_SYSTEM_V2 = 'veilops-range-v2'
+V2_VERSION = 2
+V2_BIT_BYTES = 160
+V2_MAX_BITS = 48
+_TEXT_FIELD = re.compile(r'[A-Za-z0-9_.-]{1,64}')
+V2_TEXT_FIELDS = ('operationId', 'policyId', 'asset', 'category')
+
+
+def validate_public_inputs_v2(pi) -> None:
+    """Raises ValueError unless the public inputs satisfy the v2 rules."""
+    if not isinstance(pi, dict):
+        raise ValueError('public inputs must be an object')
+    for k in V2_TEXT_FIELDS:
+        v = pi.get(k)
+        if not isinstance(v, str) or not _TEXT_FIELD.fullmatch(v):
+            raise ValueError('%s must match [A-Za-z0-9_.-]{1,64}' % k)
+    bits = _as_int(pi.get('rangeBits'))
+    if bits is None or not 1 <= bits <= V2_MAX_BITS:
+        raise ValueError('rangeBits must be 1..48')
+    mx = _as_int(pi.get('maxAmount'))
+    if mx is None or not 0 <= mx <= MAX_SAFE_INTEGER or mx >= 2**bits:
+        raise ValueError('maxAmount must be in [0, 2^rangeBits)')
+    c = pi.get('amountCommitment')
+    if not isinstance(c, str) or not _HEX64.fullmatch(c):
+        raise ValueError('amountCommitment must be 64 lowercase hex chars')
+
+
+def transcript_context_v2(pi: dict) -> str:
+    return canonical_json({'v': PROOF_SYSTEM_V2, **pi})
+
+
+def ctx_hash_v2(pi: dict, tag: str) -> bytes:
+    """SHA-256(utf8("VEILOPS/range/v2|") || ctx || utf8("|" + tag))."""
+    assert tag in ('lower', 'upper')
+    return hashlib.sha256(b'VEILOPS/range/v2|' + transcript_context_v2(pi).encode('utf-8')
+                          + b'|' + tag.encode()).digest()
+
+
+def bit_challenge_v2(ctx_hash: bytes, index: int, Ci_enc: bytes, A0_enc: bytes, A1_enc: bytes) -> int:
+    """T = "VEILOPS/range/v2/bit" || ctxHash || u32be(i) || C_i || A_0 || A_1;
+    e = LE(SHA-256(0x00||T) || SHA-256(0x01||T)) mod L."""
+    T = b'VEILOPS/range/v2/bit' + ctx_hash + index.to_bytes(4, 'big') + Ci_enc + A0_enc + A1_enc
+    wide = hashlib.sha256(b'\x00' + T).digest() + hashlib.sha256(b'\x01' + T).digest()
+    return int.from_bytes(wide, 'little') % L
+
+
+def scalar_from_le(b: bytes) -> int:
+    if len(b) != 32:
+        raise ValueError('scalar must be 32 bytes')
+    s = int.from_bytes(b, 'little')
+    if s >= L:
+        raise ValueError('non-canonical scalar (>= L)')
+    return s
+
+
+def decode_proof_v2(data: bytes):
+    """u8 version (2) || u8 n || n lower bits || n upper bits; bit = C(32)||c0||c1||s0||s1 (LE scalars).
+    Returns (n, lower, upper), each a list of (Ci_point, Ci_bytes, c0, c1, s0, s1). Raises on anything malformed."""
+    if not isinstance(data, (bytes, bytearray)) or len(data) < 2 or data[0] != V2_VERSION:
+        raise ValueError('not a veilops-range-v2 proof (version byte)')
+    n = data[1]
+    if not 1 <= n <= V2_MAX_BITS or len(data) != 2 + 2 * n * V2_BIT_BYTES:
+        raise ValueError('bad proof length')
+
+    def read(start):
+        bits = []
+        for i in range(n):
+            o = start + i * V2_BIT_BYTES
+            cb = bytes(data[o:o + 32])
+            bits.append((r255_decode(cb), cb) + tuple(scalar_from_le(bytes(data[o + 32 * k:o + 32 * (k + 1)])) for k in (1, 2, 3, 4)))
+        return bits
+
+    return n, read(2), read(2 + n * V2_BIT_BYTES)
+
+
+def proof_id_v2(data: bytes) -> str:
+    return 'prf_' + hashlib.sha256(data).hexdigest()[:20]
+
+
+def _verify_range_v2(C, bits, ctx_hash: bytes) -> bool:
+    acc = IDENTITY
+    negG = ed_neg(G)
+    for i, (Ci, cb, c0, c1, s0, s1) in enumerate(bits):
+        A0 = ed_add(ed_mul(H, s0), ed_neg(ed_mul(Ci, c0)))
+        A1 = ed_add(ed_mul(H, s1), ed_neg(ed_mul(ed_add(Ci, negG), c1)))
+        if (c0 + c1) % L != bit_challenge_v2(ctx_hash, i, cb, r255_encode(A0), r255_encode(A1)):
+            return False
+        acc = ed_add(acc, ed_mul(Ci, 1 << i))
+    return r255_eq(acc, C)
+
+
+def verify_policy_v2(pi, proof_bytes) -> tuple[bool, str]:
+    """Verify a v2 policy proof (bytes) against public inputs. Never raises. Returns (ok, reason)."""
+    try:
+        try:
+            validate_public_inputs_v2(pi)
+        except ValueError as e:
+            return False, 'public inputs: %s' % e
+        try:
+            n, lower, upper = decode_proof_v2(proof_bytes)
+        except (ValueError, DecodeError) as e:
+            return False, 'decode: %s' % e
+        if n != _as_int(pi['rangeBits']):
+            return False, 'n != rangeBits'
+        try:
+            C = point_from_hex(pi['amountCommitment'])
+        except DecodeError as e:
+            return False, 'commitment: %s' % e
+        if not _verify_range_v2(C, lower, ctx_hash_v2(pi, 'lower')):
+            return False, 'lower range proof rejected'
+        Dpt = ed_add(ed_mul(G, _as_int(pi['maxAmount'])), ed_neg(C))
+        if not _verify_range_v2(Dpt, upper, ctx_hash_v2(pi, 'upper')):
+            return False, 'upper range proof rejected'
+        return True, 'ok'
+    except Exception as exc:  # defensive: never crash
+        return False, 'exception: %r' % exc
+
+
+# ============================================================================================
 # RFC self-tests
 # ============================================================================================
 
@@ -673,6 +795,22 @@ def rfc_self_tests():
         robust = False
     yield 'malformed inputs return False without raising (%d range shapes)' % len(junk), robust, ''
 
+    good_pi = {'operationId': 'op_x', 'policyId': 'pol_x', 'asset': 'USDC', 'category': 'vendor',
+               'maxAmount': 1, 'rangeBits': 1, 'amountCommitment': r255_encode(G).hex()}
+    junk2 = [None, b'', b'\x02', b'\x02\x00', b'\x02\x01' + bytes(319), b'\x02\x01' + bytes(320),
+             b'\x02\x31' + bytes(2 + 2 * 49 * 160), 'not bytes', b'\x01\x01' + bytes(320),
+             b'\x02\x01' + b'\xff' * 320]
+    try:
+        robust2 = all(verify_policy_v2(good_pi, j)[0] is False for j in junk2)
+        robust2 = robust2 and all(verify_policy_v2(p, b'\x02\x01' + bytes(320))[0] is False for p in
+                                  (None, {}, {**good_pi, 'asset': 'US DC'}, {**good_pi, 'asset': 5},
+                                   {**good_pi, 'rangeBits': 0}, {**good_pi, 'maxAmount': 2},
+                                   {**good_pi, 'amountCommitment': good_pi['amountCommitment'].upper()},
+                                   {**good_pi, 'operationId': 'a' * 65}, {**good_pi, 'policyId': 'x\n'}))
+    except Exception:
+        robust2 = False
+    yield 'v2 malformed proofs / public inputs return False without raising', robust2, ''
+
 
 # ============================================================================================
 # Test-vector runner
@@ -733,39 +871,93 @@ def run_vectors(doc: dict):
             got, exp, '' if same_key else ' (signed by a key other than attestation.publicKey)')
 
 
+def run_vectors_v2(doc: dict):
+    """Yield (name, passed, detail) for every case in a veilops-range-v2 vector file."""
+    for i, c in enumerate(doc['contexts']):
+        pi = c['publicInputs']
+        ctx_ok = transcript_context_v2(pi) == c['transcriptContext']
+        lo = ctx_hash_v2(pi, 'lower').hex()
+        up = ctx_hash_v2(pi, 'upper').hex()
+        ch = c['challenge']
+        e = bit_challenge_v2(bytes.fromhex(c['ctxHashLower']), ch['index'], bytes.fromhex(ch['Ci']),
+                             bytes.fromhex(ch['A0']), bytes.fromhex(ch['A1']))
+        e_le = e.to_bytes(32, 'little').hex()
+        res = [('transcriptContext', ctx_ok), ('ctxHashLower', lo == c['ctxHashLower']),
+               ('ctxHashUpper', up == c['ctxHashUpper']), ('challenge.expectedLE', e_le == ch['expectedLE'])]
+        bad = [k for k, ok in res if not ok]
+        yield 'v2 contexts[%d] transcriptContext, ctxHashLower/Upper, bit challenge (index %d)' % (i, ch['index']), \
+            not bad, ('mismatch: %s (challenge got %s)' % (bad, e_le)) if bad else ''
+
+    for i, c in enumerate(doc['cases']):
+        try:
+            data = bytes.fromhex(c['proofHex'])
+        except (ValueError, TypeError):
+            data = None
+        got, reason = verify_policy_v2(c['publicInputs'], data)
+        pid_ok = data is not None and proof_id_v2(data) == c['proofId']
+        yield 'v2 cases[%d] %s' % (i, c['description']), got == c['expected'] and pid_ok, \
+            'verdict %s (%s), expected %s; proofId %s' % (got, reason, c['expected'], 'ok' if pid_ok else 'MISMATCH')
+
+
+def detect_system(doc) -> str | None:
+    name = doc.get('name', '') if isinstance(doc, dict) else ''
+    for sysname in (PROOF_SYSTEM, PROOF_SYSTEM_V2):
+        if isinstance(name, str) and name.split()[0:1] == [sysname]:
+            return sysname
+    return None
+
+
 def main(argv) -> int:
     args = [a for a in argv[1:] if a != '--quiet']
     quiet = '--quiet' in argv[1:]
-    if len(args) != 1 or args[0].startswith('-'):
-        print('usage: veilops_verify.py <veilops-range-v1.json> [--quiet]', file=sys.stderr)
+    if not args or any(a.startswith('-') for a in args):
+        print('usage: veilops_verify.py <vectors.json> [<vectors.json> ...] [--quiet]', file=sys.stderr)
         return 2
     t0 = time.perf_counter()
-    counts = {'rfc': [0, 0], 'vec': [0, 0]}
+    counts = {'rfc': [0, 0]}
 
     def report(kind, name, ok, detail):
-        counts[kind][0 if ok else 1] += 1
+        counts.setdefault(kind, [0, 0])[0 if ok else 1] += 1
         if ok and quiet:
             return
         print('%s  [%s] %s%s' % ('PASS' if ok else 'FAIL', 'rfc' if kind == 'rfc' else 'vec', name,
-                                 ('  -- ' + detail) if detail and (not ok or not quiet) else ''))
+                                 ('  -- ' + detail) if detail else ''))
 
     try:
         for name, ok, detail in rfc_self_tests():
             report('rfc', name, ok, detail)
     except Exception as exc:
         report('rfc', 'RFC self-tests crashed', False, repr(exc))
-    try:
-        with open(args[0], encoding='utf-8') as f:
-            doc = json.load(f)
-        for name, ok, detail in run_vectors(doc):
-            report('vec', name, ok, detail)
-    except Exception as exc:
-        report('vec', 'vector runner crashed', False, repr(exc))
+    files = []
+    for path in args:
+        key = os.path.basename(path)
+        while key in counts:
+            key += "'"
+        files.append(key)
+        counts[key] = [0, 0]
+        try:
+            with open(path, encoding='utf-8') as f:
+                doc = json.load(f)
+            system = detect_system(doc)
+            if system == PROOF_SYSTEM:
+                runner = run_vectors(doc)
+            elif system == PROOF_SYSTEM_V2:
+                runner = run_vectors_v2(doc)
+            else:
+                report(key, '%s: unrecognised vector file name %r' % (key, doc.get('name') if isinstance(doc, dict) else None), False, '')
+                continue
+            for name, ok, detail in runner:
+                report(key, name, ok, detail)
+        except Exception as exc:
+            report(key, '%s: vector runner crashed' % key, False, repr(exc))
     dt = time.perf_counter() - t0
-    (rp, rf), (vp, vf) = counts['rfc'], counts['vec']
-    allok = rf == 0 and vf == 0 and rp > 0 and vp > 0
-    print('SUMMARY: %s -- RFC self-tests %d/%d passed, vector cases %d/%d passed, %.2fs' % (
-        'ALL PASS' if allok else 'FAILURES', rp, rp + rf, vp, vp + vf, dt))
+    rp, rf = counts['rfc']
+    vp = sum(counts[k][0] for k in files)
+    vf = sum(counts[k][1] for k in files)
+    allok = rf == 0 and vf == 0 and rp > 0 and all(counts[k][0] > 0 for k in files)
+    per_file = ', '.join('%s %d/%d' % (k, counts[k][0], sum(counts[k])) for k in files)
+    print('SUMMARY: %s -- RFC self-tests %d/%d passed, vector cases %d/%d passed (%s), %.2fs' % (
+        'ALL PASS' if allok else 'FAILURES', rp, rp + rf, vp, vp + vf, per_file, dt))
     return 0 if allok else 1
 
 
