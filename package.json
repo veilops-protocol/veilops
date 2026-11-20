@@ -1,0 +1,34 @@
+{
+  "name": "veilops",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Privacy infrastructure for programmable financial operations, cryptographic proofs and selective disclosure.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=20.10"
+  },
+  "scripts": {
+    "dev": "npm run dev -w @veilops/website",
+    "build": "npm run build -w @veilops/website",
+    "typecheck": "tsc -p tsconfig.json --noEmit && npm run typecheck -w @veilops/website",
+    "lint": "eslint packages tests examples scripts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "samples": "tsx scripts/generate-samples.ts",
+    "audit:deps": "npm audit --omit=dev --audit-level=high"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@types/node": "22.9.0",
+    "eslint": "9.39.5",
+    "tsx": "4.19.2",
+    "typescript": "5.6.3",
+    "typescript-eslint": "8.73.0",
+    "vitest": "2.1.9"
+  }
+}
