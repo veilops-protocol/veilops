@@ -172,7 +172,7 @@ export function VerifyPlayground({ initialId, compact = false }: { initialId?: s
           </AnimatePresence>
           {error && record && <p className="mt-4 font-mono text-[12px] text-alert">{error}</p>}
           <div className="mt-8 border-t border-line pt-4 font-mono text-[10.5px] leading-relaxed text-mute">
-            <span className="text-paper/80">Implementation status:</span> real cryptographic verification · proof system experimental and unaudited · records are sample data signed by a throwaway sample-operator key · no blockchain involved.
+            <span className="text-paper/80">Implementation status:</span> real cryptographic verification · proof system experimental and unaudited · records are sample data signed by a throwaway sample-operator key · this playground runs off-chain; on-chain verification on Solana devnet is listed on the <a className="underline decoration-line underline-offset-4" href="/trust">trust page</a>.
           </div>
         </div>
       </div>
