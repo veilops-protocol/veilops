@@ -6,6 +6,7 @@ All notable changes to VEILOPS. Dates are UTC. The project follows [Semantic Ver
 
 ### Added
 
+- **Official token CA** `P8SrfF4GWpJ6muNviD7LHN8bJTTY9mhxNzrBoU2pump` (Solana, pump.fun), shown on the home page, footer, trust page, `VERIFY.md` §6 and `/.well-known/veilops.json`.
 - **Official X account** [@Veilops_Tech](https://x.com/Veilops_Tech), listed on the trust page, in `VERIFY.md` §6, the site footer and `/.well-known/veilops.json`.
 
 ## [0.2.0] - 2026-11-20

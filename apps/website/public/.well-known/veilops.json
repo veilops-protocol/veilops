@@ -25,6 +25,11 @@
     "verifierUpgradeAuthority": "9kpS3zvBWmA5jtatwPd4HvbJ1PgazbsBpxQA38grYQie",
     "mainnet": null
   },
+  "token": {
+    "chain": "solana",
+    "ca": "P8SrfF4GWpJ6muNviD7LHN8bJTTY9mhxNzrBoU2pump",
+    "launchpad": "https://pump.fun/coin/P8SrfF4GWpJ6muNviD7LHN8bJTTY9mhxNzrBoU2pump"
+  },
   "social": {
     "x": "https://x.com/Veilops_Tech",
     "telegram": null,

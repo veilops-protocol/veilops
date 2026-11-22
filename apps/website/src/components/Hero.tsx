@@ -2,6 +2,7 @@
 import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion';
 import { ProofField } from './visuals/ProofField';
 import { EASE, LinkButton } from './ui';
+import { ContractAddress } from './ContractAddress';
 
 export function Hero() {
   const reduce = useReducedMotion();
@@ -41,6 +42,7 @@ export function Hero() {
             <div key={k} className="py-2"><div className="uppercase tracking-[0.16em] text-mute/70">{k}</div><div className="mt-1 text-paper/85">{v}</div></div>
           ))}
         </div>
+        <div className="mt-4 border-t border-line pt-4"><ContractAddress /></div>
       </div>
     </section>
   );

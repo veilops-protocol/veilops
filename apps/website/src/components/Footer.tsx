@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Wordmark } from './Mark';
 import { SITE, githubUrl } from '@/lib/site';
+import { ContractAddress } from './ContractAddress';
 
 const COLS: [string, [string, string][]][] = [
   ['Protocol', [['/protocol', 'Architecture'], ['/technology', 'Technology'], ['/applications', 'Applications'], ['/roadmap', 'Roadmap']]],
@@ -21,8 +22,9 @@ export function Footer() {
           <Wordmark className="text-paper" />
           <p className="mt-6 max-w-sm text-[14px] leading-relaxed text-mute">{SITE.tagline}</p>
           <p className="mt-6 max-w-sm font-mono text-[11px] leading-relaxed text-mute/80">
-            Phase 01 software. The range proof is experimental and unaudited. Explorer data is sample data. No mainnet deployment.
+            Phase 01 software. The range proof is experimental and unaudited. Explorer data is sample data. The verifier program runs on devnet only.
           </p>
+          <div className="mt-6"><ContractAddress compact /></div>
         </div>
         {COLS.map(([title, links]) => (
           <div key={title} className="md:col-span-2">

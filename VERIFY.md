@@ -150,8 +150,9 @@ Commits made before v0.1.1 (the initial import on 2026-11-20) are unsigned.
 | --- | --- |
 | Website | <https://veilops.tech> |
 | Source code | <https://github.com/veilops-protocol> |
+| Token CA (Solana) | `P8SrfF4GWpJ6muNviD7LHN8bJTTY9mhxNzrBoU2pump` ([pump.fun](https://pump.fun/coin/P8SrfF4GWpJ6muNviD7LHN8bJTTY9mhxNzrBoU2pump)) |
 | X | [@Veilops_Tech](https://x.com/Veilops_Tech) |
 | Security reports | [GitHub private vulnerability reporting](https://github.com/veilops-protocol/veilops/security/advisories/new) |
 | Machine-readable list | <https://veilops.tech/.well-known/veilops.json> |
 
-The only official X account is [@Veilops_Tech](https://x.com/Veilops_Tech). VEILOPS has **no** Telegram or Discord yet. Anything else that claims to be official is not, unless it is added to this table and to `/.well-known/veilops.json` in a signed commit.
+Any other token address is not official. The only official X account is [@Veilops_Tech](https://x.com/Veilops_Tech). VEILOPS has **no** Telegram or Discord yet. Anything else that claims to be official is not, unless it is added to this table and to `/.well-known/veilops.json` in a signed commit.
