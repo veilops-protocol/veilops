@@ -160,10 +160,11 @@ npx tsx scripts/program-hash.ts --so veilops_verifier.so   # compare the deploye
             <div className="border-t border-line/70">
               <Kv k="website" v={SITE.url.replace('https://', '')} />
               <Kv k="source" v={<a className="underline decoration-line underline-offset-4" href={githubUrl()}>github.com/{SITE.githubOrg}</a>} />
+              <Kv k="x" v={<a className="underline decoration-line underline-offset-4" href={SITE.x}>{SITE.xHandle}</a>} />
               <Kv k="security" v={<a className="underline decoration-line underline-offset-4" href="/.well-known/security.txt">/.well-known/security.txt</a>} />
               <Kv k="machine-readable" v={<a className="underline decoration-line underline-offset-4" href="/.well-known/veilops.json">/.well-known/veilops.json</a>} />
             </div>
-            <p>VEILOPS has <strong className="text-paper">no</strong> official X, Telegram or Discord account yet. Anything else claiming to be official is not, unless it appears here and in a signed commit.</p>
+            <p>The only official X account is <a className="underline decoration-line underline-offset-4" href={SITE.x}>{SITE.xHandle}</a>. VEILOPS has <strong className="text-paper">no</strong> Telegram or Discord yet. Anything else claiming to be official is not, unless it appears here and in a signed commit.</p>
           </Row>
 
           <Row n="08" title="Independent review" status={<StatusBadge status="planned">not started</StatusBadge>}>

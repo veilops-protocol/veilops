@@ -37,6 +37,7 @@ export function Footer() {
       <div className="page flex flex-col gap-3 border-t border-line/60 py-6 font-mono text-[11px] uppercase tracking-[0.14em] text-mute sm:flex-row sm:items-center sm:justify-between">
         <span>veilops.tech · Apache-2.0</span>
         <span className="flex gap-6">
+          <a href={SITE.x} className="hover:text-paper">X {SITE.xHandle}</a>
           <button onClick={replay} className="uppercase hover:text-paper">Replay intro</button>
           {SITE.githubPublished ? <a href={githubUrl()} className="hover:text-paper">github.com/{SITE.githubOrg}</a> : <Link href="/github" className="hover:text-paper">GitHub: publishing soon</Link>}
         </span>

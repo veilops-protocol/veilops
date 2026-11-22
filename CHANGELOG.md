@@ -2,6 +2,12 @@
 
 All notable changes to VEILOPS. Dates are UTC. The project follows [Semantic Versioning](https://semver.org); everything below 1.0 is experimental.
 
+## [Unreleased]
+
+### Added
+
+- **Official X account** [@Veilops_Tech](https://x.com/Veilops_Tech), listed on the trust page, in `VERIFY.md` §6, the site footer and `/.well-known/veilops.json`.
+
 ## [0.2.0] - 2026-11-20
 
 ### Added

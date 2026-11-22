@@ -2,6 +2,8 @@ export const SITE = {
   name: 'VEILOPS',
   url: process.env.NEXT_PUBLIC_SITE_URL || 'https://veilops.tech',
   tagline: "Privacy is not the absence of proof. It's proof without exposure.",
+  x: 'https://x.com/Veilops_Tech',
+  xHandle: '@Veilops_Tech',
   githubOrg: process.env.NEXT_PUBLIC_GITHUB_ORG || 'veilops-protocol',
   /** The repositories exist at github.com/veilops-protocol (published 2026-11-20). Set to 'false' in forks without them. */
   githubPublished: process.env.NEXT_PUBLIC_GITHUB_PUBLISHED !== 'false',

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   title: { default: 'VEILOPS: proof without exposure', template: '%s · VEILOPS' },
   description: 'Privacy infrastructure for programmable financial operations, cryptographic proofs and selective disclosure. Keep the information private. Make the outcome verifiable.',
   openGraph: { title: 'VEILOPS', description: SITE.tagline, url: SITE.url, siteName: 'VEILOPS', type: 'website' },
-  twitter: { card: 'summary_large_image', title: 'VEILOPS', description: SITE.tagline },
+  twitter: { card: 'summary_large_image', site: SITE.xHandle, creator: SITE.xHandle, title: 'VEILOPS', description: SITE.tagline },
   icons: { icon: '/icon.svg' },
   alternates: { canonical: '/' },
   other: { 'github:org': SITE.githubOrg },
