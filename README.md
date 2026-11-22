@@ -15,6 +15,8 @@
 
 Privacy infrastructure for programmable financial operations, cryptographic proofs and selective disclosure.
 
+**Official token CA (Solana):** `P8SrfF4GWpJ6muNviD7LHN8bJTTY9mhxNzrBoU2pump` · [pump.fun](https://pump.fun/coin/P8SrfF4GWpJ6muNviD7LHN8bJTTY9mhxNzrBoU2pump). Any other address is not official.
+
 [veilops.tech](https://veilops.tech) · [X @Veilops_Tech](https://x.com/Veilops_Tech) · [Verify it yourself](VERIFY.md) · [Documentation](docs/) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md) · License: [Apache-2.0](LICENSE)
 
 > **Status: experimental, Phase 01 (Foundation).** The cryptography in this repository is real but has not been audited or externally reviewed. There are no npm packages and no mainnet deployment; an experimental on-chain verifier runs on Solana devnet. Releases ship reproducible package tarballs with signed build provenance, not production builds. Do not use it to protect real funds or real personal data.
